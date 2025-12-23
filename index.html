@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<!-- PNG 图标 -->
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+
+<!-- ICO 图标 -->
+<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+
+<title>词条洗练模拟器</title>
+<style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+	.card {
+		background: #020617;
+		padding: 16px;
+		border-radius: 16px;
+		width: 100%;
+		max-width: 500px; /* 桌面限制最大宽度 */
+		box-shadow: 0 20px 40px rgba(0,0,0,.5);
+		box-sizing: border-box;
+	}
+	
+	
+	.page-wrap {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+	}
+
+	h1 {
+		font-size: 22px;
+		margin-bottom: 12px;
+		text-align: center;
+	}
+
+  /* 自定义下拉 */
+	.custom-select {
+		width: 100%;
+		margin-bottom: 14px;
+	}
+  .select-selected {
+		padding: 10px;
+		border-radius: 10px;
+		border: 1px solid #1e293b;
+		background: #020617;
+		color: #e5e7eb;
+		cursor: pointer;
+	}
+  .select-items div {
+		padding: 10px;
+		cursor: pointer;
+	}
+  .select-selected .equip-item {
+		display: flex;
+		flex-direction: column; /* 图标在上，文字在下 */
+		align-items: center;    /* 水平居中 */
+		justify-content: center;
+  }
+  
+  .select-selected .equip-item img {
+		width: 40px;
+		height: 40px;
+		margin-bottom: 4px;
+  }
+  
+  .select-selected .equip-item span {
+		font-size: 14px;
+		color: #e5e7eb;
+		text-align: center;
+  }
+  .select-items div:hover { background: #1e293b; }
+  .select-hide { display: none; }
+
+	.entry {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start; /* 顶部对齐 */
+		background: #020617;
+		border: 1px solid #1e293b;
+		border-radius: 12px;
+		padding: 8px;
+		width: 140px;
+		max-height: 120px;     /* 防止单条太高 */
+		font-size: 14px;
+		text-align: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	.entry-text {
+	  text-align: center;
+	  line-height: 1.4;
+	}
+	
+  .rarity-common { color: #e5e7eb; }
+  .rarity-legendary { color: #f59e0b; }
+  .rarity-epic { color: #a855f7; }
+  .rarity-supreme { 
+    color: #22d3ee; 
+    text-shadow: 0 0 8px #22d3ee, 0 0 16px #22d3ee;
+    animation: supreme-glow 2s infinite alternate;
+  }
+  @keyframes supreme-glow {
+    0% { text-shadow: 0 0 8px #22d3ee, 0 0 16px #22d3ee; }
+    50% { text-shadow: 0 0 16px #22d3ee, 0 0 32px #22d3ee; }
+    100% { text-shadow: 0 0 8px #22d3ee, 0 0 16px #22d3ee; }
+  }
+
+	button {
+		width: 100%;
+		margin-top: 12px;
+		padding: 12px;
+		border-radius: 12px;
+		border: none;
+		font-size: 16px;
+		cursor: pointer;
+		background: linear-gradient(135deg,#22d3ee,#3b82f6);
+		color: #020617;
+		font-weight: bold;
+	}
+
+  .log {
+		margin-top: 14px;
+		font-size: 14px;
+		color: #94a3b8;
+		text-align: center;
+	}
+  
+  .water-bar {
+		position: relative;
+		z-index: 10001;
+	}
+    @media (max-width: 400px) {
+      h1 { font-size: 20px; }
+      button { font-size: 14px; padding: 8px; }
+      .entry { font-size: 12px; padding: 6px; width: 90%; max-width: 120px; }
+    }
+	.entry img {
+		width: 20px;
+		height: 20px;
+		margin-right: 8px;
+		vertical-align: middle;
+	}
+  .equip-item {
+    display: flex;
+    flex-direction: column; /* 垂直排列 */
+    align-items: center;    /* 居中对齐 */
+    padding: 8px 0;
+    cursor: pointer;
+  }
+  .equip-item img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 4px; /* 图标和文字间距 */
+  }
+  .equip-item span {
+    font-size: 14px;
+    color: #e5e7eb;
+  }
+  /* 词条显示区容器 */
+  .entry-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px; /* 卡片间距 */
+	margin-top: 12px;
+	max-height: 250px;       /* 固定高度 */
+	overflow-y: auto;        /* 超出显示滚动条 */
+	margin-bottom: 80px; /* 给按钮预留空间 */
+	padding-right: 6px;  /* 避免滚动条挡内容 */
+  }
+  
+  /* 每条词条卡片 */
+  .entry {
+    display: flex;
+    flex-direction: column; /* 垂直排列 */
+    align-items: center;    /* 居中 */
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 12px;
+    width: 140px; /* 可以根据需要调整 */
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.5s ease-in-out;
+  }
+  
+  /* 词条图标 */
+  .entry img {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+	display: block;
+  }
+  .author {
+    margin: 12px 0;
+    font-size: 14px;
+    color: #22d3ee; /* 荧光主色 */
+    text-align: center;
+    text-shadow: 
+       0 0 4px #22d3ee,
+       0 0 8px #22d3ee,
+       0 0 12px #22d3ee,
+       0 0 16px #22d3ee;
+  }
+
+  /* 荧光闪烁动画 */
+  @keyframes glow {
+    0%, 100% { text-shadow: 0 0 4px #22d3ee, 0 0 8px #22d3ee, 0 0 12px #22d3ee, 0 0 16px #22d3ee; }
+    50% { text-shadow: 0 0 8px #22d3ee, 0 0 16px #22d3ee, 0 0 24px #22d3ee, 0 0 32px #22d3ee; }
+  }
+
+  .author {
+    animation: glow 2s infinite alternate;
+  }
+/*  #发送弹幕容器 */
+	.danmu-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin-top: 8px;
+  }
+  /* 输入框样式 */
+	.danmu-wrapper input {
+		padding: 10px 16px;
+		border-radius: 20px;            /* 圆角更圆 */
+		border: none;
+		outline: none;
+		width: 100%;
+		box-sizing: border-box;
+		background: linear-gradient(135deg,#1e293b,#0f172a); /* 深色渐变 */
+		color: #f1f5f9;
+		font-size: 16px;
+		box-shadow: 0 4px 8px rgba(0,0,0,0.3), inset 0 0 4px rgba(255,255,255,0.1);
+		transition: all 0.3s ease;
+	}
+	.danmu-wrapper input::placeholder {
+		color: #94a3b8;
+	}
+	
+	.danmu-wrapper input:focus {
+	  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 0 6px rgba(59, 130, 246, 0.6);
+	  background: linear-gradient(135deg,#1e293b,#1e3a8a);
+	}
+	
+/* 按钮组容器 */
+.danmu-buttons {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* 弹幕按钮美化 */
+.danmu-buttons button {
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  outline: none;
+  background: linear-gradient(135deg,#22d3ee,#3b82f6);
+  color: #020617;
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 0 4px rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.danmu-buttons button:hover {
+  background: linear-gradient(135deg,#0ea5e9,#1e40af);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4), inset 0 0 6px rgba(59, 130, 246, 0.6);
+}
+  /* 单条弹幕 */
+.danmu {
+    position: absolute;
+    white-space: nowrap;
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff; /* 主文字颜色 */
+      text-shadow: 
+         0 0 2px #fff,
+         0 0 4px #ff00ff,
+         0 0 6px #ff00ff,
+         0 0 8px #ff00ff,
+         0 0 10px #ff00ff; /* 多层光晕效果 */
+      animation: danmu-move linear 8s;
+  }
+  
+  /* 彩蛋弹幕（荧光金色） */
+  .danmu.reward {
+    color: #facc15;
+    font-weight: bold;
+    text-shadow: 0 0 8px #facc15, 0 0 16px #f59e0b;
+  }
+  
+  @keyframes danmu-move {
+	from { transform: translateX(100vw); }
+	to   { transform: translateX(-120%); }
+	}
+    /* ===== 弹幕容器 ===== */
+    #danmu-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    @keyframes danmu-move {
+      from { transform: translateX(100vw); }
+      to   { transform: translateX(-120%); }
+    }
+	
+	.toast {
+	  position: fixed;
+	  top: 50%;
+	  left: 50%;
+	  transform: translate(-50%, -50%);
+	  background: rgba(2, 6, 23, 0.9);
+	  border: 2px solid #facc15;
+	  color: #facc15;
+	  padding: 16px 24px;
+	  border-radius: 14px;
+	  font-size: 18px;
+	  font-weight: bold;
+	  text-align: center;
+	  z-index: 10000;
+	  box-shadow: 0 0 20px #facc15;
+	  text-shadow: 0 0 6px #facc15;
+	  pointer-events: none;
+	}
+	
+	.toast.hide {
+	  display: none;
+	}
+	
+    .feature-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;  /* 保证父容器垂直居中 */
+      gap: 16px;
+      padding: 12px;
+      margin: 20px auto;
+      max-width: 600px;
+      background: #1e293b;
+      border-radius: 12px;
+    }
+    
+    .feature-btn {
+      display: flex;                 /* 完全一致的布局方式 */
+      align-items: center;
+      justify-content: center;
+      width: 180px;                  /* 固定宽度 */
+      height: 44px;                  /* 固定高度，确保完全对齐 */
+      background: #22d3ee;
+      border: none;
+      border-radius: 8px;
+      color: #020617;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;         /* a 去下划线 */
+      font-size: 14px;
+      font-family: inherit;
+      box-sizing: border-box;
+    
+      /* 重置浏览器默认样式 */
+      vertical-align: middle;
+      line-height: normal;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+    }
+
+
+	.feature-btn:hover {
+		background: #0ea5e9;
+	}
+/* 二维码样式  更新日志样式*/
+	.top-info {
+		text-align: center;
+		margin-bottom: 16px;
+		color: #22d3ee;
+		font-size: 14px;
+	}
+
+/* 更新日志 */
+	.update-note {
+		margin-bottom: 8px;
+		font-weight: bold;
+		text-align: left; /* 左对齐 */
+		text-shadow: 0 0 4px #22d3ee, 0 0 8px #22d3ee;
+	}
+
+	.qr-container {
+		display: flex;
+		justify-content: center;
+		gap: 24px;
+		flex-wrap: wrap;
+	}
+
+	.qr-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		font-size: 12px;
+		color: #e5e7eb;
+	}
+
+	.qr-item img {
+		width: 200px;  /* 可以调整大小 */
+		height: 200px;
+		border-radius: 12px;
+		border: 2px solid #22d3ee;
+		margin-bottom: 4px;
+	}
+
+  /* 稀有度颜色 */
+	.rarity-common { color: #e5e7eb; }
+	.rarity-legendary { color: #f59e0b; }
+	.rarity-epic { color: #a855f7; }
+	.rarity-supreme { 
+		color: #22d3ee; 
+		text-shadow: 0 0 8px #22d3ee, 0 0 16px #22d3ee;
+		animation: supreme-glow 2s infinite alternate;
+	}
+</style>
+</head>
+<body>
+<!-- 作者申明 -->
+<div class="page-wrap">	
+	<div class="author">
+	  作者声明：本页面仅供非盈利学习使用，不会影响游戏内数据，作者：勇士服务101区-微末凡尘-77
+	</div>
+<!-- 更新说明 + 社交二维码 -->
+<div class="top-info">
+	<div class="update-note">
+		🔔 更新说明：2025-12-22 - 优化洗练未居中问题 - 上午优化了弹幕发送布局
+	</div>
+	<div class="update-note">
+		🔔 弹幕框重新布局-添加一键发送弹幕-并且游戏里洗了100水啥都没出-
+	</div>
+
+<!-- 二维码块 -->
+  <div class="qr-container">
+    <div class="qr-item">
+      <img src="images/douyin-qr.png" alt="抖音二维码">
+      <span>关注抖音</span>
+    </div>
+    <div class="qr-item">
+      <img src="images/wechat-qr.png" alt="微信二维码">
+      <span>关注微信</span>
+    </div>
+  </div>
+</div>
+	
+<!-- 洗练模块 -->
+<div class="card">
+
+	<div id="toast" class="toast hide"></div>
+<!-- 弹幕轨道 -->
+	<div id="danmu-container"></div>
+
+  <h1>🎯 宝石词条洗练</h1>
+  
+  <!-- 自定义下拉框 -->
+	<div class="custom-select" id="equipSelect">
+		<div class="select-selected">选择装备</div>
+	<div class="select-items select-hide">
+		<div data-value="头盔" class="equip-item">
+		<img src="images/helmet.png" />
+      <span>头盔</span>
+    </div>
+    <div data-value="护腕" class="equip-item">
+      <img src="images/bracer.png" />
+      <span>护腕</span>
+    </div>
+    <div data-value="衣服" class="equip-item">
+      <img src="images/armor.png" />
+      <span>衣服</span>
+    </div>
+    <div data-value="足具" class="equip-item">
+      <img src="images/boots.png" />
+      <span>足具</span>
+    </div>
+    <div data-value="手套" class="equip-item">
+      <img src="images/gloves.png" />
+      <span>手套</span>
+    </div>
+    <div data-value="裤子" class="equip-item">
+      <img src="images/pants.png" />
+      <span>裤子</span>
+    </div>
+	</div>
+  <div id="entry" class="entry-container"></div>
+  <button onclick="reroll()">洗一次词条</button>
+	</div>
+</div>
+
+  
+  <!-- 洗澡水提示 -->
+  <div class="log water-bar" id="log">
+	  消耗：30 洗澡水 ｜ 剩余洗澡水：<span id="water">2000</span>
+  </div>
+	  <!-- 洗练次数提醒 -->
+  <div class="log" id="rollStats">
+    📊 今日洗练次数：0 次 ｜ 💧 今日消耗：0
+  </div>
+	  <!-- 刷新倒计时 -->
+	  <div class="log" id="countdown">距离明日洗澡水刷新：--:--:--</div>
+<!-- 功能框 -->
+	<div class="feature-box">
+		<a class="feature-btn" href="rarity.html">📜 词条稀有度一览</a>
+		<a class="feature-btn" href="#" onclick="alert('功能开发中')">🚧 其他功能开发中</a>
+	</div>
+	<div class="danmu-wrapper">
+		<input id="danmuInput" placeholder="发送弹幕…" />
+		<div class="danmu-buttons">
+			<button onclick="sendDanmu()">发送</button>
+			<button onclick="sendQuickDanmu()">速发！</button>
+		</div>
+	</div>
+</div> <!-- page-wrap 结束 -->	
+
+<script>
+const DAILY_WATER_LIMIT = 2000;
+
+// 获取今天日期（YYYY-MM-DD）
+function getTodayKey() {
+  const d = new Date();
+  return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+}
+
+// 初始化每日洗澡水
+function initDailyWater() {
+  const today = getTodayKey();
+  const savedDate = localStorage.getItem('water_date');
+  let savedWater = localStorage.getItem('water_left');
+
+  if (savedDate !== today || savedWater === null) {
+    // 新的一天，重置
+    localStorage.setItem('water_date', today);
+    localStorage.setItem('water_left', DAILY_WATER_LIMIT);
+    return DAILY_WATER_LIMIT;
+  }
+
+  return parseInt(savedWater, 10);
+}
+
+// 当前洗澡水
+let water = initDailyWater();
+
+let todayRollCount = 0;
+let todayWaterUsed = 0;
+
+//初始化洗练记录（页面加载）
+function initRollStats() {
+  const today = getTodayKey();
+  const savedDate = localStorage.getItem('roll_date');
+
+  if (savedDate !== today) {
+    // 新的一天，清零
+    todayRollCount = 0;
+    todayWaterUsed = 0;
+    localStorage.setItem('roll_date', today);
+  } else {
+    todayRollCount = Number(localStorage.getItem('roll_count') || 0);
+    todayWaterUsed = Number(localStorage.getItem('roll_water') || 0);
+  }
+
+  updateRollStatsUI();
+}
+
+function updateRollStatsUI() {
+  document.getElementById('rollStats').innerText =
+    `📊 今日洗练次数：${todayRollCount} 次 ｜ 💧 今日消耗：${todayWaterUsed}`;
+}
+
+// ======== 稀有度池 ========
+const rarityPool = [
+  { key: 'supreme', cls: 'rarity-supreme', rate: 0.01, mult: 1.6 },
+  { key: 'epic', cls: 'rarity-epic', rate: 0.03, mult: 1.35 },
+  { key: 'legendary', cls: 'rarity-legendary', rate: 0.1, mult: 1.15 },
+  { key: 'common', cls: 'rarity-common', rate: 0.8, mult: 1.0 }
+];
+
+// ======== 每部位词条池（示例，可自行扩展） ========
+const poolByEquip = {
+  '头盔': {
+    'supreme': [
+		'空投轰炸命中感电状态下的目标，造成8%生命值上限伤害',
+		'进入关卡时立即选择1次技能',
+		'使怪物身上已有的负面状态持续时间延长50%'
+	],
+    'epic': [
+		'温压弹碰到墙壁弹射次数+3',
+		'技能冷却-7%',
+		'暴击率+7%',
+		'使怪物身上已有的负面状态持续时间延长50%'
+    ],
+    'legendary': [
+		'温压弹碰到墙壁弹射次数+3',
+		'技能冷却-7%',
+		'暴击率+7%',
+		'防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害',
+		'防线血量+1400，受到伤害-14'
+    ],
+    'common': [
+		'造成伤害时额外追加目标最大生命值4%的伤害(最大伤害值为攻击力的300%)',
+		'枪械伤害+35%',
+		'枪械穿透+1，伤害+20%',
+		'击杀精英和首领后防线回血14%',
+		'电磁穿刺杀死怪物后，所有处于冷却中的技能冷却时间减少12%',
+		'生化矩阵伤害+24%，范围+24%',
+		'时空裂隙对目标累计造成20次伤害后，该目标失效（屏蔽被动），持续10秒',
+		'当幸运值为18、19、20时，等同于21幸运值',
+		'电极柱伤害+42%，持续时间+3秒',
+		'攻击+70'
+    ]
+  },
+  '裤子': {
+    'supreme': [
+		'旋风加农命中燃烧的怪物时,在3秒内其燃烧状态会额外造成4%最大生命值伤害',
+		'造成伤害时有3%概率秒杀怪物(对精英和首领无效)',
+		'所有附带穿透属性的技能，穿透+3',
+		'压缩气刃命中冰冻敌人时，飞溅4枚造成25%攻击力伤害的小冰弹，并且小冰弹冻结怪物0.5秒',
+		'使怪物身上已有的负面状态持续时间延长50%'
+    ],
+    'epic': [
+		'暴击率+7%',
+		'对精英和首领造成的伤害+140%',
+		'防线免疫前7次受到的伤害，并对怪物造70%角色攻击力的伤害'
+    ],
+    'legendary': [
+		'防线血量+1400，受到伤害-14',
+		'枪械伤害+35%',
+		'压缩气刃附加额外可叠加的重伤效果(每次增加8%，最多可叠加5次)，持续10秒',
+		'枪械每射击120次时，释放一次持续7秒的无限火力(攻速翻倍，无视弹夹)',
+		'暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)'
+	],
+    'common': [
+		'生化矩阵造成伤害时额外附1层基因污染，额外提供500层污染上限',
+		'空投落地爆炸后向外溅射出2枚碎片，碰撞敌人造成30%攻击力的无属性伤害',
+		'对处于负面状态的怪物造成的伤害+42%',
+		'导弹落地爆炸后向溅射出2枚碎片造成30%攻击力的伤害',
+		'时空裂隙持续时间+30%',
+		'弹球每次击杀怪物，所有技能冷却减少0.1秒 (上限2秒)',
+		'多维弹球伤害+30%，弹射次数+3',
+		'电极柱伤害+42%，持续时间+3秒',
+		'攻击+70',
+		'暴击伤害+70%',
+		'输出伤害+14%',
+		'温压弹伤害+42%',
+		'干冰弹伤害+35%',
+		'电磁穿刺伤害+35%',
+		'火系伤害+28%',
+		'冰系伤害+28%',
+		'电系伤害+28%',
+		'风系伤害+28%',
+		'能量伤害+28%',
+		'物理伤害+21%',
+		'所有爆炸伤害+21%',
+		'对血量高于70%怪物伤害+70%',
+		'防线血量不足30%时伤害+110%',
+		'对距离防线400距离的怪+42%伤害',
+		'温压弹击杀怪物时有100%概率生成一个火花',
+		'干冰弹命中结束时100%概率发生冰爆，冻结1秒',
+		'高能射线伤害次数+5',
+		'制导激光持续时间+30%',
+		'压缩气刃伤害提高28%，击退效果提高28%',
+		'空投轰炸的伤害+42%，范围+28%',
+		'装甲车伤害+42%，击退效果+28%',
+		'跃迁电子在命中怪物时有30%的慨率从怪物位置释放一条无强化的跃迁电子',
+		'无人机在运行过程中速度+50%',
+		'无人机运行过程中每击杀1名敌人冷却时间减少0.1s',
+		'燃油弹伤害+28%，减速效果+14%'
+    ]
+  },
+  // 其他部位可依此格式添加
+  '护腕': { 
+	  'supreme': [
+		  '生化矩阵合并时，目标每有1层[基因污染]将额外对其造成生命上限0.004%伤害，造成伤害时将减少1层[基因污染]',
+		  '温压弹命中怪物后会弹射出一个强化的温压弹',
+		  '冰暴发生器造成伤害时有30%概率附加无视冻结抗性的冻结',
+		  '使怪物身上已有的负面状态持续时间延长50%'  
+	  ],
+	   'epic': [
+		   '对精英和首领造成的伤害+140%',
+		   '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害',
+		   '防线血量+1400，受到伤害-14'
+	   ], 
+	   'legendary': [
+		   '暴击率+7%',
+		   '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)',
+		   '输出伤害随机在-20%~70%间浮动',
+		   '枪械伤害+35%'
+	   ],
+		'common': [
+			'每击杀一只怪防线回血5',
+			'释放技能有70%概率无视怪物的伤害减免效果',
+			'枪械射击时有5%概率击晕敌人1秒',
+			'高能射线伤害次数+3并且会对范围内的目标造成3秒眩晕',
+			'电极柱数量+1，伤害+10%',
+			'时空裂隙伤害+24%，范围+17%',
+			'幸运值下限变为5',
+			'每点幸运值增加多维弹球伤害12%',
+			'干冰弹伤害+20%，冻结时间+1秒',
+			'电极柱+1，伤害+10%',
+			'攻击+70',
+			'温压弹伤害+42%',
+			'干冰弹伤害+35%',
+			'电磁穿刺伤害+35%',
+			'火系伤害+28%',
+			'冰系伤害+28%',
+			'电系伤害+28%',
+			'风系伤害+28%',
+			'能量伤害+28%',
+			'物理伤害+21%',
+			'所有爆炸伤害+21%',
+			'对血量高于70%怪物伤害+70%',
+			'对处于负面状态的怪物造成的伤害+42%',
+			'防线血量不足30%时伤害+110%',
+			'干冰弹伤害+20%，冻结时间+1秒',
+			'高能射线命中冰冻的怪物时有25%的几率产生折射',
+			'每释放6次高能射线，就会额外释放一次扫射，造成攻击力112%的伤害',
+			'制导激光命中冰冻的怪物时有100%几率产生折射',
+			'压缩气刃伤害提高28%，击退效果提高28%',
+			'空投轰炸的伤害+42%，范围+28%',
+			'装甲车伤害+42%，击退效果+28%',
+			'跃迁电子弹射次数+5',
+			'跃迁电子可以伤害路径上的敌人，造成30%攻击力的伤害',
+			'无人机每次碰到墙壁反弹时，造成的伤害增加8%，最多40%',
+			'无人机每次命中超过20个敌方单位时，造成一次攻击力25%范围爆炸伤害',
+			'燃油弹伤害+28%，减速效果+14%'
+			] ,
+		},
+  '衣服': { 
+	  'supreme': [
+		  '电磁穿刺所有衍生技能都会使敌人燃烧，在5秒内造成2.5%最大生命值伤害',
+		  '冰系伤害技能可附带6层冻伤效果，每层每秒造成500%的伤害，持续10秒'
+	  ], 
+	  'epic': [
+		  '使怪物身上已有的负面状态持续时间延长50%',
+		  '技能冷却-7%',
+		  '暴击率+7%',
+		  '枪械齐射+1，伤害+10%',
+		  '枪械伤害+35%',
+		  '每学习一个新技能，造成伤害+18%',
+		  '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害'
+	  ], 
+	  'legendary': [
+		  '防线血量+1400，受到伤害-14',
+	  ], 
+	  'common': [
+		  '生化矩阵冷却-30%',
+		  '点数≥6时，伤害+20%；点数≥12时，弹射次数+3；点数≥18时，冷却-15%',
+		  '幸运值≥6时，伤害+20%；幸运值≥12时，弹射次数+3；幸运值≥18时，冷却-15%',
+		  '弹球造成的阻滞效果命中重伤目标时会提升至90%',
+		  '时空裂隙每造成100次伤害，则减少其他技能0.01秒冷却时间(上限0.6秒)',
+		  '防线每损失4%血量就释放一次空投轰炸',
+		  '攻击+70',
+		  '温压弹伤害+42%',
+		  '干冰弹伤害+35%',
+		  '电磁穿刺伤害+35%',
+		  '火系伤害+28%',
+		  '冰系伤害+28%',
+		  '电系伤害+28%',
+		  '风系伤害+28%',
+		  '能量伤害+28%',
+		  '物理伤害+21%',
+		  '所有爆炸伤害+21%',
+		  '前5波攻击造成伤害+84%',
+		  '对血量高于70%怪物伤害+70%',
+		  '防线每损失20%血量就释放7辆装甲车',
+		  '温压弹爆炸伤害+28%，范围+21%',
+		  '温压弹附加4秒燃烧效果',
+		  '电磁穿刺溅射范围+100%，溅射伤害+21%',
+		  '电磁穿刺命中敌人时有20%概率额外触发一次',
+		  '高能射线有30%概率附加1秒眩晕',
+		  '制导激光命中目标时，会折射100范围内的4个目标造成主射线的10%攻击力的伤害',
+		  '压缩气刃穿透+5',
+		  '压缩气刃命中点燃的敌人会产生小范围燃爆，造成70%攻击力伤害',
+		  '装甲车附带的减速效果+3秒',
+		  '冰暴发生器生成的冷冻场伤害+44%，范围+28%',
+		  '跃迁电子弹射次数+5',
+		  '跃迁电子会将命中的怪物引燃3秒',
+		  '旋风加农对处于负面状态的敌人造成的伤害+84%',
+		  '燃油弹持续时间+50%'
+		  ] ,
+		  },
+  '足具': { 
+	  'supreme': [
+		  '制导激光命中冻伤目标时，每秒减少目标0.5%最大生命值上限',
+		  '干冰弹初始发射个数+1',
+		  '弹球命中眩晕目标时，造成3%已损失生命值物理伤害',
+		  '使怪物身上已有的负面状态持续时间延长50%'
+	  ], 
+	  'epic': [
+		  '对怪物造成伤害后，有4%概率将其传送回出发点',
+		  '枪械有5%的概率对目标造成重伤效果，持续3秒（最高红色）',
+		  '攻击满血量怪物时必定造成暴击',
+		  '技能冷却-7%',
+		  '暴击率+7%'
+	  ], 
+	  'legendary': [
+		  '枪械伤害+35%',
+		  '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害',
+		  '防线血量+1400，受到伤害-14'
+	  ], 
+	  'common': [
+		  '技能弹道与行进速度+56%',
+		  '生化矩阵路径附带50%减速，持续3秒',
+		  '时空裂隙对隐身与飞行目标造成伤害+30%',
+		  '电极柱伤害+42%，持续时间+3秒',
+		  '电极柱伤害的飞行怪物，乱其飞行16秒(受到地面攻击伤害)',
+		  '温压弹伤害+42%',
+		  '干冰弹伤害+35%',
+		  '电磁穿刺伤害+35%',
+		  '火系伤害+28%',
+		  '冰系伤害+28%',
+		  '电系伤害+28%',
+		  '风系伤害+28%',
+		  '能量伤害+28%',
+		  '物理伤害+21%',
+		  '所有爆炸伤害+21%',
+		  '前5波攻击造成伤害+84%',
+		  '对血量高于70%怪物伤害+70%',
+		  '枪械射击时有5%概率冻结敌人1秒',
+		  '对距离防线400距离的怪+42%伤害',
+		  '温压弹爆炸伤害+28%，范围+21%',
+		  '温压弹爆炸后产生持续5秒的燃烧区域',
+		  '电磁穿刺命中敌人时有20%概率额外触发—次',
+		  '高能射线命中点燃的怪物产生造成50%攻击力伤害的火系爆炸(首次命中触发)',
+		  '制导激光有50%概率多发射一条无强化的激光',
+		  '压缩气刃穿透+5',
+		  '空投轰炸的伤害+42%，范围+28%',
+		  '冰暴发生器生成的冷冻场伤害+44%，范围+28%',
+		  '冰暴发生器首次释放时若命中1个怪物，则冷却-80%',
+		  '跃迁电子在命中怪物时有30%的概率从怪物位置释放一条无强化的跃迁电子',
+		  '旋风加农对处于负面状态的敌人造成的伤害+84%',
+		  '燃油弹持续时间+50%'
+		  ] ,
+		},
+  '手套': {
+	  'supreme': [
+		  '温压弹附带的燃烧效果追加目标最大生命值2%的伤害',
+		  '所有附带穿透属性的技能，穿透+3',
+		  '使怪物身上已有的负面状态持续时间延长50%'
+	  ], 
+	  'epic': [
+		  '电磁穿刺命中后释放一个无强化跃迁电子，弹射8次',
+		  '暴击率+7%',
+		  '对精英和首领造成的伤害+140%',
+		  '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害'
+	  ], 
+	  'legendary': [
+		  '防线血量+1400，受到伤害-14',
+		  '枪械伤害+35%',
+		  '释放技能时有6%概率额外释放一次',
+		  '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)',
+		  '枪械穿透+1，伤害+20%'
+	  ], 
+	  'common': [
+		  '对血量高于70%怪物伤害+70%',
+		  '对距离防线400距离的怪+42%伤害',
+		  '玩家【弹道技能】穿过电极柱时，每隔0.5秒附加麻痹效果,【弹道技能】对伤害的敌人造成1秒麻痹',
+		  '生化矩阵合并时，有56%概率召唤2个矩阵追加合并',
+		  '生化矩阵撞击时，有56%概率额外召唤一对小型矩阵追加撞击',
+		  '时空裂隙对负面状态的敌人造成伤害+56%',
+		  '弹球每次弹射后，下次命中目标伤害+8%',
+		  '每点幸运值增加多维弹球伤害12%',
+		  '电极柱伤害的目标增加受到的击退/牵引[力+50%，持续+1.6秒',
+		  '攻击+70',
+		  '暴击伤害+70%',
+		  '输出伤害+14%',
+		  '温压弹伤害+42%',
+		  '干冰弹伤害+35%',
+		  '电磁穿刺伤害+35%',
+		  '火系伤害+28%',
+		  '冰系伤害+28%',
+		  '电系伤害+28%',
+		  '风系伤害+28%',
+		  '能量伤害+28%',
+		  '物理伤害+21%',
+		  '所有爆炸伤害+21%',
+		  '对处于负面状态的怪物造成的伤害+42%',
+		  '防线血量不足30%时伤害+110%',
+		  '电磁穿刺伤害+10%，麻痹持续时间+1秒',
+		  '高能射线伤害次数+5',
+		  '高能射线冷却时间-20%',
+		  '压缩气刃伤害提高28%，击退效果提高28%',
+		  '空投轰炸的伤害+42%，范围+28%',
+		  '装甲车伤害+42%，击退效果+28%',
+		  '跃迁电子弹射次数+5',
+		  '旋风加农伤害+30%，牵引力+60%',
+		  '旋风加农命中敌人时有25%的概率释放2次无强化的压缩气刃',
+		  '无人机在运行过程中速度+50%',
+		  '燃油弹伤害+28%，减速效果+14%'
+		  ] ,
+		}
+};
+
+// ======== 装备图标 ========
+const equipIcons = {
+  '头盔': 'images/helmet.png',
+  '护腕': 'images/bracer.png',
+  '衣服': 'images/armor.png',
+  '足具': 'images/boots.png',
+  '手套': 'images/gloves.png',
+  '裤子': 'images/pants.png'
+};
+
+// 当前选择装备
+let selectedEquip = null;
+// let water = 2000;
+const costPerRoll = 30;
+let current = null;
+
+// ======== 抽取稀有度 ========
+function rollRarity() {
+  const r = Math.random();
+  let sum = 0;
+  for (const rar of rarityPool) {
+    sum += rar.rate;
+    if (r <= sum) return rar;
+  }
+  return rarityPool[rarityPool.length - 1];
+}
+
+// ======== 抽词条 ========
+function rollEntry() {
+  const equip = selectedEquip;
+  if (!equip) return { text: '请先选择装备', rarity: { cls: 'rarity-common' } };
+  const equipPool = poolByEquip[equip];
+  let rarity = rollRarity();
+  let list = equipPool[rarity.key];
+  if (!list || list.length === 0) {
+    list = equipPool['common'];
+    rarity = { key:'common', cls:'rarity-common', mult:1.0 };
+  }
+  const text = list[Math.floor(Math.random() * list.length)];
+  return { text, rarity };
+}
+
+// ======== 渲染词条 ========
+function render() {
+  const box = document.getElementById('entry');
+  box.innerHTML = '';
+  if (!current) return;
+
+  const div = document.createElement('div');
+  div.className = `entry ${current.rarity.cls}`;
+
+  if (selectedEquip && equipIcons[selectedEquip]) {
+    const img = document.createElement('img');
+    img.src = equipIcons[selectedEquip];
+    div.appendChild(img);
+  }
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'entry-text';
+  textSpan.innerText = current.text;
+  div.appendChild(textSpan);
+  
+  box.appendChild(div);
+}
+
+// ======== 洗练 ========
+function reroll() {
+  if (!selectedEquip) { alert('请先选择装备'); return; }
+  if (water < costPerRoll) {
+    document.getElementById('log').innerText = '今日洗澡水已用完';
+    return;
+  }
+// 扣水
+  water -= costPerRoll;
+  localStorage.setItem('water_left', water);
+
+  // ===== 新增：统计洗练 =====
+  todayRollCount++;
+  todayWaterUsed += costPerRoll;
+
+  localStorage.setItem('roll_count', todayRollCount);
+  localStorage.setItem('roll_water', todayWaterUsed);
+  localStorage.setItem('roll_date', getTodayKey());
+
+  updateRollStatsUI();
+  // ==========================
+
+  current = rollEntry();
+  render();
+  document.getElementById('water').innerText = water;
+  
+  
+  
+}
+
+// ======== 下拉框事件 ========
+const equipSelect = document.getElementById('equipSelect');
+const selectedDiv = equipSelect.querySelector('.select-selected');
+const itemsDiv = equipSelect.querySelector('.select-items');
+
+selectedDiv.addEventListener('click', () => itemsDiv.classList.toggle('select-hide'));
+
+itemsDiv.querySelectorAll('div').forEach(item => {
+  item.addEventListener('click', () => {
+    selectedEquip = item.getAttribute('data-value');
+	const clone = item.cloneNode(true);
+    selectedDiv.innerHTML = item.innerHTML;
+    itemsDiv.classList.add('select-hide');
+    current = rollEntry();
+    render();
+  });
+});
+
+	function sendQuickDanmu() {
+	  const msg = "爱你77";
+	  createDanmu(msg);
+	}
+  /* ===== 永久弹幕内容 ===== */
+  const permanentDanmus = [
+    "⭐ 勇士服务101区 · 微末凡尘 · 77",
+    "🎯 宝石洗练模拟器 · 非盈利学习使用",
+    "💧 洗澡水攒一攒，至尊迟早来",
+    "🔥 至尊词条不是梦",
+    "💖 输入：爱你77 触发彩蛋",
+	"😘 欧皇就是你！"
+  ];
+
+
+// 保存永久弹幕元素
+const danmuContainer = document.getElementById("danmu-container");
+const allDanmus = []; // 所有正在滚动的弹幕
+
+// ====== 创建弹幕函数 ======
+/* ===== 创建弹幕 ===== */
+function createDanmu(text, isPermanent = false) {
+  const container = document.getElementById("danmu-container");
+  const danmu = document.createElement("div");
+  danmu.className = "danmu";
+  danmu.innerText = text;
+
+  if (isPermanent) {
+    danmu.style.top = Math.random() * 70 + 10 + "%"; // 随机高度
+    const duration = 20 + Math.random() * 10; // 20~30秒跨屏
+    danmu.style.animation = `danmu-move ${duration}s linear infinite`;
+  } else {
+    const maxHeight = container.clientHeight - 30;
+    danmu.style.top = Math.random() * maxHeight + "px";
+    const duration = 8 + text.length * 0.15;
+    danmu.style.animation = `danmu-move ${duration}s linear`;
+  }
+
+  container.appendChild(danmu);
+
+  // 动画结束移除非永久弹幕
+  if (!isPermanent) {
+    danmu.addEventListener("animationend", () => danmu.remove());
+  }
+}
+
+/* ===== 启动永久弹幕 ===== */
+function startPermanentDanmu() {
+  permanentDanmus.forEach((text, index) => {
+    setTimeout(() => {
+      createDanmu(text, true);
+    }, index * 2000); // 依次间隔
+  });
+}
+
+/* ===== 页面加载后启动 ===== */
+window.onload = function () {
+  startPermanentDanmu();
+};
+
+// ====== 用户发送弹幕 ======
+function sendDanmu() {
+  const input = document.getElementById('danmuInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // 彩蛋检测
+  if (text === '爱你77') {
+    water += 1000;
+    document.getElementById('water').innerText = water;
+    localStorage.setItem('water_left', water);
+    showToast('🎉 彩蛋触发！获得 1000 洗澡水');
+  }
+
+  createDanmu(text, false);
+  input.value = '';
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hide');
+
+  setTimeout(() => {
+    toast.classList.add('hide');
+  }, 2000);
+}
+function getTomorrowZero() {
+  const now = new Date();
+  const tomorrow = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0
+  );
+  return tomorrow;
+}
+
+function updateCountdown() {
+  const now = new Date();
+  const target = getTomorrowZero();
+  let diff = Math.floor((target - now) / 1000);
+
+  if (diff <= 0) {
+    // 到点了，重置水量
+    water = DAILY_WATER_LIMIT;
+    localStorage.setItem('water_left', water);
+    localStorage.setItem('water_date', getTodayKey());
+    document.getElementById('water').innerText = water;
+    diff = 0;
+  }
+
+  const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+  const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+  const s = String(diff % 60).padStart(2, '0');
+
+  document.getElementById('countdown').innerText =
+    `距离明日洗澡水刷新：${h}:${m}:${s}`;
+}
+
+// 启动倒计时
+setInterval(updateCountdown, 1000);
+updateCountdown();
+// 页面初始化
+render();
+
+initRollStats();
+// 初始化洗澡水
+document.getElementById('water').innerText = water;
+
+// 防止F12恶意篡改
+let devtoolsOpen = false;
+
+function detectDevTools() {
+  const start = performance.now();
+  debugger;
+  const end = performance.now();
+
+  if (end - start > 100) {
+    if (!devtoolsOpen) {
+      devtoolsOpen = true;
+      showToast('⚠ 检测到开发者工具\n本页面仅供学习娱乐\n请勿恶意修改数据');
+    }
+  } else {
+    devtoolsOpen = false;
+  }
+}
+
+// 每 2 秒检测一次
+setInterval(detectDevTools, 2000);
+
+</script>
+
+</body>
+</html>

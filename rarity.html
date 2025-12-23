@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>词条稀有度展示</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+/* 顶部菜单栏 */
+.menu {
+  display: flex;
+  justify-content: center;
+  background: #1e293b;
+  padding: 10px 0;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.menu button {
+  background: #020617;
+  border: 1px solid #94a3b8;
+  border-radius: 8px;
+  color: #e5e7eb;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.menu button:hover {
+  background: #94a3b8;
+  color: #020617;
+}
+
+/* 页面容器 */
+.container {
+  max-width: 1100px;
+  margin: 16px auto;
+  padding: 16px;
+}
+
+/* 返回按钮 */
+.feature-box {
+  display: flex;
+  justify-content: center; /* 居中 */
+  margin-bottom: 16px;
+}
+
+.feature-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 44px;
+  background: #22d3ee;
+  border: none;
+  border-radius: 8px;
+  color: #020617;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: 0.2s;
+}
+
+.feature-btn:hover {
+  background: #0ea5e9;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+/* 横向滚动容器 */
+.scroll-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 16px;
+  scroll-behavior: smooth;
+}
+
+.scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+/* 装备卡片 */
+.card {
+  flex: 0 0 32%;
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px;
+  transition: transform .2s, box-shadow .2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,.4);
+}
+
+.equip {
+  font-size: 18px;
+  font-weight: bold;
+  color: #22d3ee;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.rarity-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+.entry {
+  padding-left: 12px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 彩色荧光效果 */
+.supreme { color: #22d3ee; text-shadow: 0 0 4px #22d3ee,0 0 8px #22d3ee,0 0 16px #22d3ee; }
+.epic { color: #a855f7; text-shadow: 0 0 4px #a855f7,0 0 8px #a855f7,0 0 16px #a855f7; }
+.legendary { color: #f59e0b; text-shadow: 0 0 4px #f59e0b,0 0 8px #f59e0b,0 0 16px #f59e0b; }
+.common { color: #e5e7eb; text-shadow: 0 0 2px #e5e7eb,0 0 4px #e5e7eb,0 0 8px #e5e7eb; }
+
+/* 手机适配 */
+@media (max-width: 900px) { .card { flex: 0 0 45%; } }
+@media (max-width: 600px) { .card { flex: 0 0 80%; } }
+
+</style>
+</head>
+
+<body>
+
+<!-- 返回按钮 -->
+<div class="feature-box">
+  <a class="feature-btn" href="index.html">🔙 返回</a>
+</div>
+
+<h1>📘 词条稀有度一览</h1>
+
+<!-- 菜单 -->
+<div class="menu" id="menu"></div>
+
+<!-- 装备卡片横向滚动容器 -->
+<div class="scroll-container" id="list"></div>
+<script>
+// 词条数据
+const rarityData = [
+  // ===== 头盔 =====
+  { equip: '头盔', rarity: 'supreme', label: '至尊', text: '空投轰炸命中感电状态下的目标，造成8%生命值上限伤害' },
+  { equip: '头盔', rarity: 'supreme', label: '至尊', text: '进入关卡时立即选择1次技能' },
+  { equip: '头盔', rarity: 'supreme', label: '至尊', text: '使怪物身上已有的负面状态持续时间延长50%' },
+  { equip: '头盔', rarity: 'epic', label: '史诗', text: '温压弹碰到墙壁弹射次数+3' },
+  { equip: '头盔', rarity: 'epic', label: '史诗', text: '技能冷却-7%' },
+  { equip: '头盔', rarity: 'epic', label: '史诗', text: '暴击率+7%' },
+  { equip: '头盔', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害' },
+  { equip: '头盔', rarity: 'legendary', label: '传说', text: '防线血量+1400，受到伤害-14' },
+  { equip: '头盔', rarity: 'legendary', label: '传说', text: '造成伤害时额外追加目标最大生命值4%的伤害(最大伤害值为攻击力的300%)' },
+  { equip: '头盔', rarity: 'legendary', label: '传说', text: '枪械伤害+35%' },
+  { equip: '头盔', rarity: 'legendary', label: '传说', text: '枪械穿透+1，伤害+20%' },
+  { equip: '头盔', rarity: 'legendary', label: '传说', text: '击杀精英和首领后防线回血14%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '电磁穿刺杀死怪物后，所有处于冷却中的技能冷却时间减少12%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '生化矩阵伤害+24%，范围+24%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '时空裂隙对目标累计造成20次伤害后，该目标失效（屏蔽被动），持续10秒（内置冷却60秒)' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '当幸运值为18、19、20时，等同于21幸运值' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '电极柱伤害+42%，持续时间+3秒' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '攻击+70' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '前5波攻击造成伤害+84%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '对血量高于70%怪物伤害+70%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '防线每损失4%血量就释放一辆装甲车' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '防线首次血量低于25%时，将在接下来的6秒内免疫所有伤害' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '温压弹爆炸伤害+28%，范围+21%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '干冰弹穿透+3' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '制导激光冷却时间-20%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '压缩气刃穿透+5' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '空投轰炸一轮内每释放1颗导弹，暴击率+10%，下轮效果清空' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '装甲车每击杀1只怪冷却缩减2%冷却缩减上限25%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '跃迁电子杀怪后生成持续3秒的电磁场' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '跃迁电子在命中怪物时有30%的慨率从怪物位置释放一条无强化的跃迁电子' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '跃迁电子额外选取一次初始目标' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '旋风加农对处于负面状态的敌人造成的伤害+84%' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '旋风加农每刮中10个目标会发射一个穿透2单位的小旋风，造成60%攻击力的伤害' },
+  { equip: '头盔', rarity: 'common', label: '普通', text: '燃油弹持续时间+50%' },
+ // ===== 裤子 =====
+  { equip: '裤子', rarity: 'supreme', label: '至尊', text: '旋风加农命中燃烧的怪物时,在3秒内其燃烧状态会额外造成4%最大生命值伤害' },
+  { equip: '裤子', rarity: 'supreme', label: '至尊', text: '造成伤害时有3%概率秒杀怪物(对精英和首领无效)' },
+  { equip: '裤子', rarity: 'supreme', label: '至尊', text: '所有附带穿透属性的技能，穿透+3' },
+  { equip: '裤子', rarity: 'supreme', label: '至尊', text: '压缩气刃命中冰冻敌人时，飞溅4枚造成25%攻击力伤害的小冰弹，并且小冰弹冻结怪物0.5秒' },
+  { equip: '裤子', rarity: 'supreme', label: '至尊', text: '使怪物身上已有的负面状态持续时间延长50%' },
+  { equip: '裤子', rarity: 'epic', label: '史诗', text: '暴击率+7%' },
+  { equip: '裤子', rarity: 'epic', label: '史诗', text: '对精英和首领造成的伤害+140%' },
+  { equip: '裤子', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造70%角色攻击力的伤害' },
+  { equip: '裤子', rarity: 'legendary', label: '传说', text: '防线血量+1400，受到伤害-14' },
+  { equip: '裤子', rarity: 'legendary', label: '传说', text: '枪械伤害+35%' },
+  { equip: '裤子', rarity: 'legendary', label: '传说', text: '压缩气刃附加额外可叠加的重伤效果(每次增加8%，最多可叠加5次)，持续10秒' },
+  { equip: '裤子', rarity: 'legendary', label: '传说', text: '枪械每射击120次时，释放一次持续7秒的无限火力(攻速翻倍，无视弹夹)' },
+  { equip: '裤子', rarity: 'legendary', label: '传说', text: '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '生化矩阵造成伤害时额外附1层基因污染，额外提供500层污染上限' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '空投落地爆炸后向外溅射出2枚碎片，碰撞敌人造成30%攻击力的无属性伤害' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '对处于负面状态的怪物造成的伤害+42%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '导弹落地爆炸后向溅射出2枚碎片造成30%攻击力的伤害' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '时空裂隙持续时间+30%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '弹球每次击杀怪物，所有技能冷却减少0.1秒 (上限2秒)' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '多维弹球伤害+30%，弹射次数+3' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '电极柱伤害+42%，持续时间+3秒' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '攻击+70' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '暴击伤害+70%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '输出伤害+14%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '干冰弹穿透+3' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '制导激光冷却时间-20%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '压缩气刃穿透+5' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '空投轰炸一轮内每释放1颗导弹，暴击率+10%，下轮效果清空' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '装甲车每击杀1只怪冷却缩减2%冷却缩减上限25%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '跃迁电子杀怪后生成持续3秒的电磁场' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '跃迁电子在命中怪物时有30%的慨率从怪物位置释放一条无强化的跃迁电子' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '跃迁电子额外选取一次初始目标' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '旋风加农对处于负面状态的敌人造成的伤害+84%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '旋风加农每刮中10个目标会发射一个穿透2单位的小旋风，造成60%攻击力的伤害' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '燃油弹持续时间+50%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '无人机在运行过程中速度+50%' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '无人机运行过程中每击杀1名敌人冷却时间减少0.1s' },
+  { equip: '裤子', rarity: 'common', label: '普通', text: '燃油弹伤害+28%，减速效果+14%' },
+  //====护腕===
+    { equip: '护腕', rarity: 'supreme', label: '至尊', text: '生化矩阵合并时，目标每有1层[基因污染]将额外对其造成生命上限0.004%伤害，造成伤害时将减少1层[基因污染]' },
+    { equip: '护腕', rarity: 'supreme', label: '至尊', text: '温压弹命中怪物后会弹射出一个强化的温压弹' },
+    { equip: '护腕', rarity: 'epic', label: '史诗', text: '对精英和首领造成的伤害+140%' },
+    { equip: '护腕', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害' },
+    { equip: '护腕', rarity: 'epic', label: '史诗', text: '防线血量+1400，受到伤害-14' },
+    { equip: '护腕', rarity: 'legendary', label: '传说', text: '暴击率+7%' },
+    { equip: '护腕', rarity: 'legendary', label: '传说', text: '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)' },
+    { equip: '护腕', rarity: 'legendary', label: '传说', text: '输出伤害随机在-20%~70%间浮动' },
+    { equip: '护腕', rarity: 'legendary', label: '传说', text: '枪械伤害+35%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '每击杀一只怪防线回血5' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '释放技能有70%概率无视怪物的伤害减免效果' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '枪械射击时有5%概率击晕敌人1秒' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '高能射线伤害次数+3并且会对范围内的目标造成3秒眩晕' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '电极柱数量+1，伤害+10%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '时空裂隙伤害+24%，范围+17%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '幸运值下限变为5' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '每点幸运值增加多维弹球伤害12%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '干冰弹伤害+20%，冻结时间+1秒' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '电极柱+1，伤害+10%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '攻击+70' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '对血量高于70%怪物伤害+70%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '对处于负面状态的怪物造成的伤害+42%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '防线血量不足30%时伤害+110%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '干冰弹伤害+20%，冻结时间+1秒' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '高能射线命中冰冻的怪物时有25%的几率产生折射' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '每释放6次高能射线，就会额外释放一次扫射，造成攻击力112%的伤害' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '制导激光命中冰冻的怪物时有100%几率产生折射' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '压缩气刃伤害提高28%，击退效果提高28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '空投轰炸的伤害+42%，范围+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '装甲车伤害+42%，击退效果+28%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '跃迁电子弹射次数+5' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '跃迁电子可以伤害路径上的敌人，造成30%攻击力的伤害' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '无人机每次碰到墙壁反弹时，造成的伤害增加8%，最多40%' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '无人机每次命中超过20个敌方单位时，造成一次攻击力25%范围爆炸伤害' },
+    { equip: '护腕', rarity: 'common', label: '普通', text: '燃油弹伤害+28%，减速效果+14%' },
+	
+	//===衣服===
+	  { equip: '衣服', rarity: 'supreme', label: '至尊', text: '电磁穿刺所有衍生技能都会使敌人燃烧，在5秒内造成2.5%最大生命值伤害' },
+	  { equip: '衣服', rarity: 'supreme', label: '至尊', text: '冰系伤害技能可附带6层冻伤效果，每层每秒造成500%的伤害，持续10秒' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '使怪物身上已有的负面状态持续时间延长50%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '技能冷却-7%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '暴击率+7%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '枪械齐射+1，伤害+10%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '枪械伤害+35%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '每学习一个新技能，造成伤害+18%' },
+	  { equip: '衣服', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害' },
+	  { equip: '衣服', rarity: 'legendary', label: '传说', text: '防线血量+1400，受到伤害-14' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '生化矩阵冷却-30%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '点数≥6时，伤害+20%；点数≥12时，弹射次数+3；点数≥18时，冷却-15%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '幸运值≥6时，伤害+20%；幸运值≥12时，弹射次数+3；幸运值≥18时，冷却-15%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '弹球造成的阻滞效果命中重伤目标时会提升至90%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '时空裂隙每造成100次伤害，则减少其他技能0.01秒冷却时间(上限0.6秒)' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '防线每损失4%血量就释放一次空投轰炸' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '攻击+70' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '对血量高于70%怪物伤害+70%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '防线每损失20%血量就释放7辆装甲车' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '温压弹爆炸伤害+28%，范围+21%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '温压弹附加4秒燃烧效果' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '电磁穿刺溅射范围+100%，溅射伤害+21%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '电磁穿刺命中敌人时有20%概率额外触发一次' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '高能射线有30%概率附加1秒眩晕' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '制导激光命中目标时，会折射100范围内的4个目标造成主射线的10%攻击力的伤害' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '压缩气刃穿透+5' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '压缩气刃命中点燃的敌人会产生小范围燃爆，造成70%攻击力伤害' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '装甲车附带的减速效果+3秒' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '冰暴发生器生成的冷冻场伤害+44%，范围+28%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '跃迁电子弹射次数+5' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '跃迁电子会将命中的怪物引燃3秒' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '旋风加农对处于负面状态的敌人造成的伤害+84%' },
+	  { equip: '衣服', rarity: 'common', label: '普通', text: '燃油弹持续时间+50%' },
+	  { equip: '鞋子', rarity: 'supreme', label: '至尊', text: '温压弹附带的燃烧效果追加目标最大生命值2%的伤害' },
+      { equip: '鞋子', rarity: 'supreme', label: '至尊', text: '所有附带穿透属性的技能，穿透+3' },
+      { equip: '鞋子', rarity: 'supreme', label: '至尊', text: '使怪物身上已有的负面状态持续时间延长50%' },
+      { equip: '鞋子', rarity: 'epic', label: '史诗', text: '电磁穿刺命中后释放一个无强化跃迁电子，弹射8次' },
+      { equip: '鞋子', rarity: 'epic', label: '史诗', text: '暴击率+7%' },
+      { equip: '鞋子', rarity: 'epic', label: '史诗', text: '对精英和首领造成的伤害+140%' },
+      { equip: '鞋子', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害' },
+      { equip: '鞋子', rarity: 'legendary', label: '传说', text: '防线血量+1400，受到伤害-14' },
+      { equip: '鞋子', rarity: 'legendary', label: '传说', text: '枪械伤害+35%' },
+      { equip: '鞋子', rarity: 'legendary', label: '传说', text: '释放技能时有6%概率额外释放一次' },
+      { equip: '鞋子', rarity: 'legendary', label: '传说', text: '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)' },
+      { equip: '鞋子', rarity: 'legendary', label: '传说', text: '枪械穿透+1，伤害+20%' },
+ 	  { equip: '鞋子', rarity: 'common', label: '普通', text: '对距离防线400距离的怪+42%伤害' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '玩家【弹道技能】穿过电极柱时，每隔0.5秒附加麻痹效果,【弹道技能】对伤害的敌人造成1秒麻痹' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '生化矩阵合并时，有56%概率召唤2个矩阵追加合并' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '生化矩阵撞击时，有56%概率额外召唤一对小型矩阵追加撞击' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '时空裂隙对负面状态的敌人造成伤害+56%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '前5波攻击造成伤害+84%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '对血量高于70%怪物伤害+70%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '弹球每次弹射后，下次命中目标伤害+8%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '每点幸运值增加多维弹球伤害12%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '电极柱伤害的目标增加受到的击退/牵引力+50%，持续+1.6秒' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '攻击+70' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '暴击伤害+70%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '输出伤害+14%' },
+	  { equip: '鞋子', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '对处于负面状态的怪物造成的伤害+42%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '防线血量不足30%时伤害+110%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '电磁穿刺伤害+10%，麻痹持续时间+1秒' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '高能射线伤害次数+5' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '高能射线冷却时间-20%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '压缩气刃伤害提高28%，击退效果提高28%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '空投轰炸的伤害+42%，范围+28%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '装甲车伤害+42%，击退效果+28%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '跃迁电子弹射次数+5' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '旋风加农伤害+30%，牵引力+60%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '旋风加农命中敌人时有25%的概率释放2次无强化的压缩气刃' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '无人机在运行过程中速度+50%' },
+      { equip: '鞋子', rarity: 'common', label: '普通', text: '燃油弹伤害+28%，减速效果+14%' },
+
+      { equip: '手套', rarity: 'supreme', label: '至尊', text: '温压弹附带的燃烧效果追加目标最大生命值2%的伤害' },
+      { equip: '手套', rarity: 'supreme', label: '至尊', text: '所有附带穿透属性的技能，穿透+3' },
+      { equip: '手套', rarity: 'supreme', label: '至尊', text: '使怪物身上已有的负面状态持续时间延长50%' },
+      { equip: '手套', rarity: 'epic', label: '史诗', text: '电磁穿刺命中后释放一个无强化跃迁电子，弹射8次' },
+  { equip: '手套', rarity: 'epic', label: '史诗', text: '暴击率+7%' },
+  { equip: '手套', rarity: 'epic', label: '史诗', text: '对精英和首领造成的伤害+140%' },
+  { equip: '手套', rarity: 'epic', label: '史诗', text: '防线免疫前7次受到的伤害，并对怪物造成70%角色攻击力的伤害' },
+  { equip: '手套', rarity: 'legendary', label: '传说', text: '防线血量+1400，受到伤害-14' },
+  { equip: '手套', rarity: 'legendary', label: '传说', text: '枪械伤害+35%' },
+  { equip: '手套', rarity: 'legendary', label: '传说', text: '释放技能时有6%概率额外释放一次' },
+  { equip: '手套', rarity: 'legendary', label: '传说', text: '暴击时，额外追加目标最大生命值8%伤害(最大伤害值为攻击力的500%)' },
+  { equip: '手套', rarity: 'legendary', label: '传说', text: '枪械穿透+1，伤害+20%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '对距离防线400距离的怪+42%伤害' },
+  { equip: '手套', rarity: 'common', label: '普通',text:'玩家【弹道技能】穿过电极柱时，每隔0.5秒附加麻痹效果,【弹道技能】对伤害的敌人造成1秒麻痹'},
+  { equip: '手套', rarity: 'common', label: '普通', text: '生化矩阵合并时，有56%概率召唤2个矩阵追加合并' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '生化矩阵撞击时，有56%概率额外召唤一对小型矩阵追加撞击' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '时空裂隙对负面状态的敌人造成伤害+56%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '干冰弹伤害+35%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '电磁穿刺伤害+35%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '火系伤害+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '冰系伤害+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '电系伤害+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '风系伤害+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '能量伤害+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '物理伤害+21%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '所有爆炸伤害+21%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '前5波攻击造成伤害+84%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '对血量高于70%怪物伤害+70%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '弹球每次弹射后，下次命中目标伤害+8%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '每点幸运值增加多维弹球伤害12%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '电极柱伤害的目标增加受到的击退/牵引力+50%，持续+1.6秒' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '攻击+70' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '暴击伤害+70%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '输出伤害+14%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '温压弹伤害+42%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '对处于负面状态的怪物造成的伤害+42%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '防线血量不足30%时伤害+110%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '电磁穿刺伤害+10%，麻痹持续时间+1秒' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '高能射线伤害次数+5' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '高能射线冷却时间-20%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '压缩气刃伤害提高28%，击退效果提高28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '空投轰炸的伤害+42%，范围+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '装甲车伤害+42%，击退效果+28%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '跃迁电子弹射次数+5' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '旋风加农伤害+30%，牵引力+60%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '旋风加农命中敌人时有25%的概率释放2次无强化的压缩气刃' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '无人机在运行过程中速度+50%' },
+  { equip: '手套', rarity: 'common', label: '普通', text: '燃油弹伤害+28%，减速效果+14%' }
+];
+
+const list = document.getElementById('list');
+const menu = document.getElementById('menu');
+
+// 按装备分组
+const grouped = {};
+rarityData.forEach(item => {
+  if (!grouped[item.equip]) grouped[item.equip] = [];
+  grouped[item.equip].push(item);
+});
+
+// 渲染菜单
+Object.keys(grouped).forEach(equip => {
+  const btn = document.createElement('button');
+  btn.textContent = equip;
+  btn.onclick = () => {
+    const target = document.getElementById(`card-${equip}`);
+    if(target){
+      target.scrollIntoView({behavior:'smooth', inline:'start'});
+    }
+  };
+  menu.appendChild(btn);
+});
+
+// 渲染装备卡片
+for (const equip in grouped) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = `card-${equip}`;
+
+  // 装备名
+  const equipName = document.createElement('div');
+  equipName.className = 'equip';
+  equipName.textContent = equip;
+  div.appendChild(equipName);
+
+  // 按稀有度分类
+  const rarityMap = {};
+  grouped[equip].forEach(item => {
+    if (!rarityMap[item.rarity]) rarityMap[item.rarity] = [];
+    rarityMap[item.rarity].push(item);
+  });
+
+  for (const rarity in rarityMap) {
+    const rarityTitle = document.createElement('div');
+    rarityTitle.className = `rarity-title ${rarity}`;
+    rarityTitle.textContent = rarityMap[rarity][0].label;
+    div.appendChild(rarityTitle);
+
+    rarityMap[rarity].forEach(item => {
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.innerHTML = `<span class="${item.rarity}">${item.text}</span>`;
+      div.appendChild(entry);
+    });
+  }
+
+  list.appendChild(div);
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>词条洗练模拟器</title>
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #020617;
+  padding: 16px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.5);
+  box-sizing: border-box;
+}
+
+.page-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+h1 { text-align: center; }
+
+.custom-select {
+  width: 100%;
+  margin-bottom: 14px;
+}
+.select-selected {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #e5e7eb;
+  cursor: pointer;
+}
+	.select-items div { padding: 10px; cursor: pointer; }
+	.select-items div:hover { background: #1e293b; }
+	.select-hide { display: none; }
+
+	.entry-container {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 12px;
+		margin-top: 12px;
+		max-height: 250px;       /* 固定高度 */
+		overflow-y: auto;        /* 超出显示滚动条 */
+	}
+
+	.entry {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		background: #020617;
+		border: 1px solid #1e293b;
+		border-radius: 12px;
+		padding: 12px;
+		width: 140px;
+		font-size: 14px;
+		text-align: center;
+		transition: all 0.5s ease-in-out;
+	}
+
+.entry img {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  background: linear-gradient(135deg,#22d3ee,#3b82f6);
+  color: #020617;
+  font-weight: bold;
+}
+
+.log { margin-top: 10px; font-size: 14px; text-align: center; color:#94a3b8; }
+
+@media (max-width: 400px) {
+  .entry { width: 90%; max-width: 120px; font-size: 12px; padding: 6px; }
+  button { font-size: 14px; padding: 8px; }
+}
+
+#danmu-container {
+  position: fixed;
+  top:0; left:0; width:100vw; height:100vh;
+  pointer-events:none; overflow:hidden; z-index:9999;
+}
+
+.danmu {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow:0 0 2px #fff,0 0 4px #ff00ff,0 0 6px #ff00ff,0 0 8px #ff00ff;
+  animation: danmu-move linear 8s;
+}
+
+@keyframes danmu-move { from { transform: translateX(100vw);} to { transform: translateX(-120%);} }
+
+.danmu.reward { color:#facc15; text-shadow:0 0 8px #facc15,0 0 16px #f59e0b; font-weight:bold; }
+
+.toast {
+  position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  background: rgba(2,6,23,0.9);
+  border: 2px solid #facc15;
+  color:#facc15;
+  padding:16px 24px;
+  border-radius:14px;
+  font-size:18px;
+  font-weight:bold;
+  text-align:center;
+  z-index:10000;
+  box-shadow:0 0 20px #facc15;
+  text-shadow:0 0 6px #facc15;
+  pointer-events:none;
+}
+.toast.hide { display:none; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="card">
+    <h1>🎯 宝石词条洗练</h1>
+    <div class="custom-select" id="equipSelect">
+      <div class="select-selected">选择装备</div>
+      <div class="select-items select-hide">
+        <div data-value="头盔" class="equip-item"><img src="images/helmet.png"><span>头盔</span></div>
+        <div data-value="护腕" class="equip-item"><img src="images/bracer.png"><span>护腕</span></div>
+        <div data-value="衣服" class="equip-item"><img src="images/armor.png"><span>衣服</span></div>
+        <div data-value="足具" class="equip-item"><img src="images/boots.png"><span>足具</span></div>
+        <div data-value="手套" class="equip-item"><img src="images/gloves.png"><span>手套</span></div>
+        <div data-value="裤子" class="equip-item"><img src="images/pants.png"><span>裤子</span></div>
+      </div>
+    </div>
+    <div id="entry" class="entry-container"></div>
+    <button onclick="reroll()">洗一次词条</button>
+    <div class="log">消耗：30 洗澡水 ｜ 剩余洗澡水：<span id="water">2000</span></div>
+    <div class="log" id="rollStats">📊 今日洗练次数：0 次 ｜ 💧 今日消耗：0</div>
+  </div>
+</div>
+
+<div id="danmu-container"></div>
+<div id="toast" class="toast hide"></div>
+
+<script>
+const DAILY_WATER_LIMIT = 2000;
+
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function initDailyWater() {
+  const today = getTodayKey();
+  const savedDate = localStorage.getItem('water_date');
+  let savedWater = localStorage.getItem('water_left');
+  if(savedDate!==today || savedWater===null){
+    localStorage.setItem('water_date',today);
+    localStorage.setItem('water_left',DAILY_WATER_LIMIT);
+    return DAILY_WATER_LIMIT;
+  }
+  return parseInt(savedWater,10);
+}
+
+let water = initDailyWater();
+let todayRollCount = 0;
+let todayWaterUsed = 0;
+
+function initRollStats(){
+  const today = getTodayKey();
+  const savedDate = localStorage.getItem('roll_date');
+  if(savedDate!==today){
+    todayRollCount = 0; todayWaterUsed=0;
+    localStorage.setItem('roll_date',today);
+  } else {
+    todayRollCount = Number(localStorage.getItem('roll_count')||0);
+    todayWaterUsed = Number(localStorage.getItem('roll_water')||0);
+  }
+  updateRollStatsUI();
+}
+
+function updateRollStatsUI(){
+  document.getElementById('rollStats').innerText=
+    `📊 今日洗练次数：${todayRollCount} 次 ｜ 💧 今日消耗：${todayWaterUsed}`;
+}
+
+initRollStats();
+
+// 下拉选择逻辑
+const select = document.getElementById('equipSelect');
+const selected = select.querySelector('.select-selected');
+const items = select.querySelector('.select-items');
+let currentEquip = null;
+
+selected.addEventListener('click',()=>{ items.classList.toggle('select-hide'); });
+document.addEventListener('click',e=>{ if(!select.contains(e.target)){items.classList.add('select-hide');} });
+
+document.querySelectorAll('.equip-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    const name = item.dataset.value;
+    currentEquip = name;
+    selected.innerHTML = item.innerHTML;
+    items.classList.add('select-hide');
+
+    // 展示装备
+    const entryContainer = document.getElementById('entry');
+    entryContainer.innerHTML='';
+    const card = document.createElement('div'); card.className='entry';
+    const img = document.createElement('img'); img.src=item.querySelector('img').src;
+    const span = document.createElement('span'); span.innerText=name;
+    card.appendChild(img); card.appendChild(span);
+    entryContainer.appendChild(card);
+  });
+});
+
+// 洗一次词条
+function reroll(){
+  if(!currentEquip){ alert('请先选择装备'); return; }
+  if(water<30){ alert('洗澡水不足'); return; }
+  water-=30; todayRollCount++; todayWaterUsed+=30;
+  localStorage.setItem('water_left',water);
+  localStorage.setItem('roll_count',todayRollCount);
+  localStorage.setItem('roll_water',todayWaterUsed);
+  document.getElementById('water').innerText=water;
+  updateRollStatsUI();
+
+  showToast(`💧 成功洗练 ${currentEquip} 词条`);
+}
+
+// 弹幕发送
+function sendDanmu(text='测试弹幕'){
+  const container=document.getElementById('danmu-container');
+  const dm = document.createElement('div'); dm.className='danmu';
+  dm.innerText=text;
+  dm.style.top = Math.random()*80+'vh';
+  dm.style.animationDuration = (5+Math.random()*5)+'s';
+  container.appendChild(dm);
+  setTimeout(()=>{ dm.remove(); },10000);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.innerText=msg; t.classList.remove('hide');
+  setTimeout(()=>{ t.classList.add('hide'); },2000);
+}
+</script>
+</body>
+</html>
